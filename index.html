@@ -651,34 +651,40 @@ async function sendMessage(message = null) {
             localStorage.setItem('topics', JSON.stringify(topics));
         }
 
-        function switchTopic(topic) {
-            currentTopic = topic;
-            chatContainer.innerHTML = '';
-            if (topic) {
-                currentTopicElement.textContent = topic.name;
-                topic.messages.forEach(msg => {
-                    addMessage(msg.content, msg.role === 'user', false);
-                });
-                if (topic.model) {
-                    modelSelect.value = topic.model;
-                }
-            } else {
-                currentTopicElement.textContent = 'AI 对话助手';
-            }
-            renderTopicList();
+function switchTopic(topic) {
+    if (currentTopic && currentTopic.id === topic.id) {
+        return; // 如果切换到当前主题，则不进行任何操作
+    }
+
+    currentTopic = topic;
+    chatContainer.innerHTML = ''; // 清空聊天容器
+
+    if (topic) {
+        currentTopicElement.textContent = topic.name;
+        topic.messages.forEach(msg => {
+            addMessage(msg.content, msg.role === 'user', false);
+        });
+        if (topic.model) {
+            modelSelect.value = topic.model;
         }
+    } else {
+        currentTopicElement.textContent = 'AI 对话助手';
+    }
+
+    renderTopicList(); // 重新渲染主题列表，更新选中状态
+}
 
 function renderTopicList() {
     topicList.innerHTML = '';
     topics.forEach(topic => {
         const topicDiv = document.createElement('div');
-        topicDiv.classList.add('flex', 'justify-between', 'items-center', 'mb-2', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-600', 'transition-colors', 'duration-200', 'topic-item'); 
+        topicDiv.classList.add('flex', 'justify-between', 'items-center', 'mb-2', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-600', 'transition-colors', 'duration-200', 'topic-item'); // 添加 topic-item 类名
         if (currentTopic && currentTopic.id === topic.id) {
             topicDiv.classList.add('topic-active');
         } else {
             topicDiv.classList.add('bg-gray-700');
         }
-        topicDiv.dataset.topicId = topic.id; 
+        topicDiv.dataset.topicId = topic.id; // 添加 data-topic-id 属性
         topicDiv.innerHTML = `
             <span class="flex-grow">${topic.name}</span>
             <button class="edit-topic-btn mr-2 hover:text-gray-300" data-topic-id="${topic.id}">
@@ -688,7 +694,6 @@ function renderTopicList() {
                 <i class="fas fa-trash-alt"></i> 
             </button>
         `;
-
         // 添加点击事件监听器 (使用事件委托)
         topicList.addEventListener('click', (event) => {
             if (event.target.closest('.topic-item')) {
@@ -705,16 +710,19 @@ function renderTopicList() {
                 deleteTopic(parseInt(topicId));
             }
         });
+        
 
-        // 添加编辑主题名称功能 (直接添加到按钮上)
-        const editTopicBtn = topicDiv.querySelector('.edit-topic-btn');
-        editTopicBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // 阻止事件冒泡到 topicList
-            const newTopicName = prompt("请输入新的主题名称:", topic.name);
-            if (newTopicName && newTopicName.trim() !== "") {
-                topic.name = newTopicName.trim();
-                saveTopic(topic);
-                renderTopicList();
+        // 添加编辑主题名称功能 (使用事件委托)
+        topicList.addEventListener('click', (event) => {
+            if (event.target.closest('.edit-topic-btn')) {
+                const topicId = event.target.closest('.edit-topic-btn').dataset.topicId;
+                const topic = topics.find(t => t.id === parseInt(topicId));
+                const newTopicName = prompt("请输入新的主题名称:", topic.name);
+                if (newTopicName && newTopicName.trim() !== "") {
+                    topic.name = newTopicName.trim();
+                    saveTopic(topic);
+                    renderTopicList();
+                }
             }
         });
 
