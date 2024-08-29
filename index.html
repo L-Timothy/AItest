@@ -377,6 +377,8 @@
     </div>
 </div>
 
+
+
     <script>
         const apiUrls = {
             line1: 'https://opus.gptuu.com/v1/chat/completions',
@@ -518,19 +520,19 @@
             });
         }
 
-        async function sendMessage(message = null) {
-            const userMessage = message || userInput.value.trim();
-            if (!userMessage) return;
+async function sendMessage(message = null) {
+    const userMessage = message || userInput.value.trim();
+    if (!userMessage) return;
 
-            if (!message) {
-                addMessage(userMessage, true);
-                userInput.value = '';
-            }
+    if (!message) {
+        addMessage(userMessage, true);
+        userInput.value = '';
+    }
 
-            const messageId = 'msg-' + Date.now();
-            const aiMessageDiv = document.createElement('div');
-            aiMessageDiv.classList.add('mb-4', 'message', 'mr-auto');
-            aiMessageDiv.innerHTML = `
+    const messageId = 'msg-' + Date.now();
+    const aiMessageDiv = document.createElement('div');
+    aiMessageDiv.classList.add('mb-4', 'message', 'mr-auto');
+    aiMessageDiv.innerHTML = `
         <div class="ai-message">
             <div class="message-content" id="${messageId}">AI正在思考中...</div>
             <div class="message-actions">
@@ -547,79 +549,83 @@
             </div>
         </div>
     `;
-            chatContainer.appendChild(aiMessageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+    chatContainer.appendChild(aiMessageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            try {
-                const decryptedApiKey = await decryptApiKey(); // 解密 API Key
+    try {
+        const decryptedApiKey = await decryptApiKey(); // 解密 API Key
 
-                const response = await fetch(currentApiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${decryptedApiKey}` // 使用解密后的 API Key
-                    },
-                    body: JSON.stringify({
-                        model: modelSelect.value,
-                        messages: currentTopic.messages,
-                        temperature: temperature,
-                        stream: true
-                    })
-                });
+        const response = await fetch(currentApiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${decryptedApiKey}` // 使用解密后的 API Key
+            },
+            body: JSON.stringify({
+                model: modelSelect.value,
+                messages: currentTopic.messages,
+                temperature: temperature,
+                stream: true
+            })
+        });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let aiMessage = '';
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let aiMessage = '';
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-                    const parsedLines = lines
-                        .map(line => line.replace(/^data: /, '').trim())
-                        .filter(line => line !== '' && line !== '[DONE]')
-                        .map(line => {
-                            try {
-                                return JSON.parse(line);
-                            } catch (e) {
-                                console.error('Error parsing JSON:', e);
-                                return null;
-                            }
-                        })
-                        .filter(line => line !== null);
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            const parsedLines = lines
+                .map(line => line.replace(/^data: /, '').trim())
+                .filter(line => line !== '' && line !== '[DONE]')
+                .map(line => {
+                    try {
+                        return JSON.parse(line);
+                    } catch (e) {
+                        console.error('Error parsing JSON:', e);
+                        return null;
+                    }
+                })
+                .filter(line => line !== null);
 
-                    for (const parsedLine of parsedLines) {
-                        const { choices } = parsedLine;
-                        if (choices && choices.length > 0) {
-                            const { delta } = choices[0];
-                            const { content } = delta;
-                            if (content) {
-                                aiMessage += content;
-                                document.getElementById(messageId).innerHTML = marked.parse(preprocessAIResponse(aiMessage));
-                            }
-                        }
+            for (const parsedLine of parsedLines) {
+                const { choices } = parsedLine;
+                if (choices && choices.length > 0) {
+                    const { delta } = choices[0];
+                    const { content } = delta;
+                    if (content) {
+                        aiMessage += content;
+                        document.getElementById(messageId).innerHTML = marked.parse(preprocessAIResponse(aiMessage));
                     }
                 }
-
-                if (currentTopic) {
-                    currentTopic.messages.push({ role: 'assistant', content: aiMessage });
-                    currentTopic.model = modelSelect.value;
-                    saveTopic(currentTopic);
-                }
-
-                addCopyButtonListener(aiMessageDiv.querySelector('.copy-button'));
-                addRegenerateButtonListener(aiMessageDiv.querySelector('.regenerate-button'));
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById(messageId).innerHTML = `抱歉，发生了错误：${error.message}`;
             }
         }
+
+        if (currentTopic) {
+            currentTopic.messages.push({ role: 'assistant', content: aiMessage });
+            currentTopic.model = modelSelect.value;
+            saveTopic(currentTopic);
+        }
+
+        addCopyButtonListener(aiMessageDiv.querySelector('.copy-button'));
+        addRegenerateButtonListener(aiMessageDiv.querySelector('.regenerate-button'));
+    } catch (error) {
+        console.error('Error:', error);
+        if (error.message === '请在设置里填入正确的 API Key') {
+            document.getElementById(messageId).innerHTML = `请在设置里填入正确的 API Key`;
+        } else {
+            document.getElementById(messageId).innerHTML = `抱歉，发生了错误：${error.message}`;
+        }
+    }
+}
 
         function createTopic(name) {
             const topic = {
@@ -876,36 +882,49 @@ function initializeApp() {
             localStorage.setItem('apiKeyKey', JSON.stringify(exportedKey));
         }
 
-        // 解密 API Key
-        async function decryptApiKey() {
-            // 从 localStorage 获取加密数据和密钥信息
-            const { ciphertext, iv } = JSON.parse(localStorage.getItem('encryptedApiKey'));
-            const jwkKey = JSON.parse(localStorage.getItem('apiKeyKey'));
+// 解密 API Key
+async function decryptApiKey() {
+    // 从 localStorage 获取加密数据和密钥信息
+    const encryptedApiKey = localStorage.getItem('encryptedApiKey');
+    const apiKeyKey = localStorage.getItem('apiKeyKey');
 
-            // 导入密钥
-            const key = await crypto.subtle.importKey(
-                'jwk',
-                jwkKey,
-                {
-                    name: 'AES-GCM',
-                },
-                true,
-                ['encrypt', 'decrypt']
-            );
+    // 检查是否存储了加密数据和密钥信息
+    if (!encryptedApiKey || !apiKeyKey) {
+        throw new Error('请在设置里填入正确的 API Key');
+    }
 
-            // 解密数据
-            const decryptedApiKey = await crypto.subtle.decrypt(
-                {
-                    name: 'AES-GCM',
-                    iv: new Uint8Array(iv),
-                },
-                key,
-                new Uint8Array(ciphertext)
-            );
+    try {
+        const { ciphertext, iv } = JSON.parse(encryptedApiKey);
+        const jwkKey = JSON.parse(apiKeyKey);
 
-            // 将解密后的数据转换为字符串
-            return new TextDecoder().decode(decryptedApiKey);
-        }
+        // 导入密钥
+        const key = await crypto.subtle.importKey(
+            'jwk',
+            jwkKey,
+            {
+                name: 'AES-GCM',
+            },
+            true,
+            ['encrypt', 'decrypt']
+        );
+
+        // 解密数据
+        const decryptedApiKey = await crypto.subtle.decrypt(
+            {
+                name: 'AES-GCM',
+                iv: new Uint8Array(iv),
+            },
+            key,
+            new Uint8Array(ciphertext)
+        );
+
+        // 将解密后的数据转换为字符串
+        return new TextDecoder().decode(decryptedApiKey);
+    } catch (error) {
+        // 解密失败，可能是 API Key 错误
+        throw new Error('请在设置里填入正确的 API Key');
+    }
+}
 
         // 在页面加载完成后初始化应用
         window.addEventListener('load', initializeApp);
