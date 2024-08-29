@@ -3,10 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 对话助手</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         /* 通用样式 */
         .scrollbar-hide::-webkit-scrollbar {
@@ -667,28 +668,59 @@ async function sendMessage(message = null) {
             renderTopicList();
         }
 
-        function renderTopicList() {
-            topicList.innerHTML = '';
-            topics.forEach(topic => {
-                const topicDiv = document.createElement('div');
-                topicDiv.classList.add('flex', 'justify-between', 'items-center', 'mb-2', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-600', 'transition-colors', 'duration-200');
-                if (currentTopic && currentTopic.id === topic.id) {
-                    topicDiv.classList.add('topic-active');
-                } else {
-                    topicDiv.classList.add('bg-gray-700');
-                }
-                topicDiv.innerHTML = `
-            <span class="flex-grow">${topic.name}</span>
-            <button class="delete-topic-btn text-red-500 hover:text-red-700 ml-2">×</button>
-        `;
-                topicDiv.addEventListener('click', () => switchTopic(topic));
-                topicDiv.querySelector('.delete-topic-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteTopic(topic.id);
-                });
-                topicList.appendChild(topicDiv);
-            });
+function renderTopicList() {
+    topicList.innerHTML = '';
+    topics.forEach(topic => {
+        const topicDiv = document.createElement('div');
+        topicDiv.classList.add('flex', 'justify-between', 'items-center', 'mb-2', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-600', 'transition-colors', 'duration-200', 'topic-item'); 
+        if (currentTopic && currentTopic.id === topic.id) {
+            topicDiv.classList.add('topic-active');
+        } else {
+            topicDiv.classList.add('bg-gray-700');
         }
+        topicDiv.dataset.topicId = topic.id; 
+        topicDiv.innerHTML = `
+            <span class="flex-grow">${topic.name}</span>
+            <button class="edit-topic-btn mr-2 hover:text-gray-300" data-topic-id="${topic.id}">
+                <i class="fas fa-pencil-alt"></i> 
+            </button>
+            <button class="delete-topic-btn text-red-500 hover:text-red-700" data-topic-id="${topic.id}">
+                <i class="fas fa-trash-alt"></i> 
+            </button>
+        `;
+
+        // 添加点击事件监听器 (使用事件委托)
+        topicList.addEventListener('click', (event) => {
+            if (event.target.closest('.topic-item')) {
+                const topicId = event.target.closest('.topic-item').dataset.topicId;
+                const topic = topics.find(t => t.id === parseInt(topicId));
+                switchTopic(topic);
+            }
+        });
+
+        // 添加删除主题功能 (使用事件委托)
+        topicList.addEventListener('click', (event) => {
+            if (event.target.closest('.delete-topic-btn')) {
+                const topicId = event.target.closest('.delete-topic-btn').dataset.topicId;
+                deleteTopic(parseInt(topicId));
+            }
+        });
+
+        // 添加编辑主题名称功能 (直接添加到按钮上)
+        const editTopicBtn = topicDiv.querySelector('.edit-topic-btn');
+        editTopicBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // 阻止事件冒泡到 topicList
+            const newTopicName = prompt("请输入新的主题名称:", topic.name);
+            if (newTopicName && newTopicName.trim() !== "") {
+                topic.name = newTopicName.trim();
+                saveTopic(topic);
+                renderTopicList();
+            }
+        });
+
+        topicList.appendChild(topicDiv);
+    });
+}
 
         function deleteTopic(topicId) {
             topics = topics.filter(t => t.id !== topicId);
