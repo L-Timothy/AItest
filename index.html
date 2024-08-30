@@ -675,15 +675,19 @@ function switchTopic(topic) {
 }
 
 function renderTopicList() {
-    topicList.innerHTML = '';
+    topicList.innerHTML = ''; // 清空主题列表容器
     topics.forEach(topic => {
+        // 创建主题项的 div 元素
         const topicDiv = document.createElement('div');
-        topicDiv.classList.add('flex', 'justify-between', 'items-center', 'mb-2', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-600', 'transition-colors', 'duration-200', 'topic-item'); // 添加 topic-item 类名
+        topicDiv.classList.add('flex', 'justify-between', 'items-center', 'mb-2', 'p-2', 'rounded', 'cursor-pointer', 'hover:bg-gray-600', 'transition-colors', 'duration-200', 'topic-item'); 
+        
+        // 如果是当前主题，添加 active 类
         if (currentTopic && currentTopic.id === topic.id) {
             topicDiv.classList.add('topic-active');
         } else {
             topicDiv.classList.add('bg-gray-700');
         }
+
         topicDiv.dataset.topicId = topic.id; // 添加 data-topic-id 属性
         topicDiv.innerHTML = `
             <span class="flex-grow">${topic.name}</span>
@@ -694,51 +698,36 @@ function renderTopicList() {
                 <i class="fas fa-trash-alt"></i> 
             </button>
         `;
-        // 添加点击事件监听器 (使用事件委托)
-        topicList.addEventListener('click', (event) => {
-            if (event.target.closest('.topic-item')) {
-                const topicId = event.target.closest('.topic-item').dataset.topicId;
-                const topic = topics.find(t => t.id === parseInt(topicId));
-                switchTopic(topic);
+
+        // 先将 topicDiv 添加到 topicList 中
+        topicList.appendChild(topicDiv); 
+
+        // 添加编辑主题名称功能 (直接绑定到按钮上)
+        const editTopicBtn = topicDiv.querySelector('.edit-topic-btn'); 
+        editTopicBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // 阻止事件冒泡到 topicList
+            const newTopicName = prompt("请输入新的主题名称:", topic.name);
+            if (newTopicName && newTopicName.trim() !== "") {
+                topic.name = newTopicName.trim();
+                saveTopic(topic);
+                renderTopicList(); // 修改主题后重新渲染列表
             }
         });
-
-        // 添加删除主题功能 (使用事件委托)
-        topicList.addEventListener('click', (event) => {
-            if (event.target.closest('.delete-topic-btn')) {
-                const topicId = event.target.closest('.delete-topic-btn').dataset.topicId;
-                deleteTopic(parseInt(topicId));
-            }
-        });
-        
-
-        // 添加编辑主题名称功能 (使用事件委托)
-        topicList.addEventListener('click', (event) => {
-            if (event.target.closest('.edit-topic-btn')) {
-                const topicId = event.target.closest('.edit-topic-btn').dataset.topicId;
-                const topic = topics.find(t => t.id === parseInt(topicId));
-                const newTopicName = prompt("请输入新的主题名称:", topic.name);
-                if (newTopicName && newTopicName.trim() !== "") {
-                    topic.name = newTopicName.trim();
-                    saveTopic(topic);
-                    renderTopicList();
-                }
-            }
-        });
-
-        topicList.appendChild(topicDiv);
     });
 }
 
-        function deleteTopic(topicId) {
-            topics = topics.filter(t => t.id !== topicId);
-            localStorage.setItem('topics', JSON.stringify(topics));
-            if (currentTopic && currentTopic.id === topicId) {
-                switchTopic(topics.length > 0 ? topics[0] : null);
-            } else {
-                renderTopicList();
-            }
-        }
+function deleteTopic(topicId) {
+  // 添加确认弹窗
+  if (confirm(`确定要删除主题 "${topics.find(t => t.id === topicId).name}" 吗？`)) {
+    topics = topics.filter(t => t.id !== topicId);
+    localStorage.setItem('topics', JSON.stringify(topics));
+    if (currentTopic && currentTopic.id === topicId) {
+      switchTopic(topics.length > 0 ? topics[0] : null);
+    } else {
+      renderTopicList();
+    }
+  }
+}
 
         function setupModalListeners(modalId, openBtnId, closeBtnId) {
             const modal = document.getElementById(modalId);
@@ -800,6 +789,18 @@ function initializeApp() {
 
     appInitialized = true;
 }
+
+    topicList.addEventListener('click', (event) => {
+        if (event.target.closest('.topic-item')) {
+            const topicId = event.target.closest('.topic-item').dataset.topicId;
+            const topic = topics.find(t => t.id === parseInt(topicId));
+            switchTopic(topic);
+        }
+        if (event.target.closest('.delete-topic-btn')) {
+            const topicId = event.target.closest('.delete-topic-btn').dataset.topicId;
+            deleteTopic(parseInt(topicId));
+        }
+    });
 
         sendBtn.addEventListener('click', () => sendMessage());
         userInput.addEventListener('keypress', (e) => {
