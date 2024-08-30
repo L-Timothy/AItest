@@ -530,6 +530,11 @@ async function sendMessage(message = null) {
         userInput.value = '';
     }
 
+    // 检查是否已经有主题，如果没有则创建一个默认主题
+    if (!currentTopic) {
+        createTopic('默认主题');
+    }
+
     const messageId = 'msg-' + Date.now();
     const aiMessageDiv = document.createElement('div');
     aiMessageDiv.classList.add('mb-4', 'message', 'mr-auto');
@@ -721,10 +726,13 @@ function deleteTopic(topicId) {
   if (confirm(`确定要删除主题 "${topics.find(t => t.id === topicId).name}" 吗？`)) {
     topics = topics.filter(t => t.id !== topicId);
     localStorage.setItem('topics', JSON.stringify(topics));
-    if (currentTopic && currentTopic.id === topicId) {
-      switchTopic(topics.length > 0 ? topics[0] : null);
+
+    // 检查是否删除了最后一个主题
+    if (topics.length === 0) {
+      createTopic('默认主题'); // 创建一个新的默认主题
     } else {
-      renderTopicList();
+      // 切换到第一个主题
+      switchTopic(topics[0]); 
     }
   }
 }
