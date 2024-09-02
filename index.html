@@ -274,9 +274,6 @@
                 <div class="flex items-center">
                     <label for="modelSelect" class="mr-2">模型:</label>
                     <select id="modelSelect" class="border rounded p-1">
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet</option>
-                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
                     </select>
                 </div>
             </div>
@@ -305,13 +302,12 @@
                 <label for="temperature">Temperature (0-1):</label>
                 <input id="temperature" type="number" min="0" max="1" step="0.1" class="w-full border rounded p-2">
             </div>
-            <div class="form-group">
-                <label for="apiLine">线路:</label>
-                <select id="apiLine" class="w-full border rounded p-2">
-                    <option value="https://opus.gptuu.com/v1/chat/completions">线路1</option>
-                    <option value="https://capi.swt-ai.com/v1/chat/completions">线路2</option>
-                </select>
-            </div>
+<div class="form-group">
+    <label for="apiLine">线路:</label>
+    <select id="apiLine" class="w-full border rounded p-2">
+        <option value="line1">线路1</option> <option value="line2">线路2</option>
+    </select>
+</div>
             <div class="modal-buttons">
                 <button id="saveSettingsBtn"
                     class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors duration-200">保存</button>
@@ -381,11 +377,26 @@
 
 
     <script>
-        const apiUrls = {
-            line1: 'https://opus.gptuu.com/v1/chat/completions',
-            line2: 'https://capi.swt-ai.com/v1/chat/completions'
-        };
-        let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1;
+const apiUrls = {
+    line1: {
+        url: 'https://opus.gptuu.com/v1/chat/completions',
+        models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
+        modelDisplayNames: { // 将模型显示名称的映射关系放到 apiUrls 对象中
+            'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
+            'claude-3-opus-20240229': 'claude-3-opus'
+        }
+    },
+    line2: {
+        url: 'https://capi.swt-ai.com/v1/chat/completions',
+        models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
+        modelDisplayNames: { // 将模型显示名称的映射关系放到 apiUrls 对象中
+            'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
+            'claude-3-opus-20240229': 'claude-3-opus'
+        }
+    },
+};
+
+let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1.url; // 使用 apiUrls.line1.url 获取线路 1 的 URL
         let apiKey = localStorage.getItem('apiKey') || '';
         let temperature = parseFloat(localStorage.getItem('temperature')) || 0.7;
         let currentTopic = null;
@@ -769,14 +780,14 @@ function initializeApp() {
     if (appInitialized) return;
 
     topics = JSON.parse(localStorage.getItem('topics')) || [];
-    
+
     // 检查 topics 是否为空，如果为空则创建默认主题
     if (topics.length === 0) {
         const defaultTopic = {
             id: Date.now(),
             name: '默认主题',
             messages: [],
-            model: modelSelect.value 
+            model: apiUrls[Object.keys(apiUrls)[0]].models[0] // 使用第一线路的第一个模型作为默认模型
         };
         topics.push(defaultTopic);
         saveTopic(defaultTopic); // 保存默认主题到 localStorage
@@ -789,13 +800,47 @@ function initializeApp() {
 
     apiKey = localStorage.getItem('apiKey') || '';
     temperature = parseFloat(localStorage.getItem('temperature')) || 0.7;
-    currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1;
+
+    // 获取存储的线路 URL，如果没有则使用第一线路的 URL
+    const storedApiUrl = localStorage.getItem('currentApiUrl');
+    const defaultApiUrl = apiUrls.line1.url; // 获取第一线路的 URL
+    currentApiUrl = storedApiUrl || defaultApiUrl;
 
     apiKeyInput.value = apiKey;
     temperatureInput.value = temperature;
-    apiLineSelect.value = currentApiUrl;
+
+    // 确保在 currentApiUrl 初始化后再更新模型下拉列表
+    updateModelSelect(); 
 
     appInitialized = true;
+}
+
+// 更新模型选择下拉列表
+function updateModelSelect() {
+    modelSelect.innerHTML = ''; // 清空下拉列表
+
+    // 找到与 currentApiUrl 匹配的线路名称
+    let lineName = '';
+    for (const key in apiUrls) {
+        if (apiUrls[key].url === currentApiUrl) {
+            lineName = key;
+            break;
+        }
+    }
+
+    // 使用线路名称获取模型列表和模型显示名称的映射关系
+    const models = apiUrls[lineName].models;
+    const modelDisplayNames = apiUrls[lineName].modelDisplayNames || {}; // 从 apiUrls 对象中获取 modelDisplayNames
+
+    models.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model; // 实际模型名称
+        option.text = modelDisplayNames[model] || model; // 显示模型名称，如果找不到映射关系，则使用实际模型名称
+        modelSelect.appendChild(option);
+    });
+
+    // 设置线路选择下拉列表的默认值
+    apiLineSelect.value = lineName;
 }
 
     topicList.addEventListener('click', (event) => {
@@ -818,18 +863,29 @@ function initializeApp() {
             }
         });
 
-        settingsBtn.addEventListener('click', () => {
-            apiKeyInput.value = apiKey;
-            temperatureInput.value = temperature;
-            apiLineSelect.value = currentApiUrl;
-            settingsModal.classList.remove('hidden');
-            settingsModal.classList.add('flex');
-        });
+settingsBtn.addEventListener('click', () => {
+    apiKeyInput.value = "****************"; // 使用星号掩盖 API Key
+    temperatureInput.value = temperature;
+
+    // 找到与 currentApiUrl 匹配的线路名称
+    for (const lineName in apiUrls) {
+        if (apiUrls[lineName].url === currentApiUrl) {
+            apiLineSelect.value = lineName;
+            break;
+        }
+    }
+
+    settingsModal.classList.remove('hidden');
+    settingsModal.classList.add('flex');
+});
 
         saveSettingsBtn.addEventListener('click', () => {
             apiKey = apiKeyInput.value;
             temperature = parseFloat(temperatureInput.value);
-            currentApiUrl = apiLineSelect.value;
+
+    // 获取选中的线路名称
+    const selectedLine = apiLineSelect.value; // 直接使用 apiLineSelect.value 获取线路名称
+    currentApiUrl = apiUrls[selectedLine].url; // 根据线路名称获取 URL
 
             if (apiKey) {
                 encryptApiKey(apiKey)
@@ -844,6 +900,7 @@ function initializeApp() {
             localStorage.setItem('currentApiUrl', currentApiUrl);
             settingsModal.classList.add('hidden');
             settingsModal.classList.remove('flex');
+            updateModelSelect(); // 更新模型选择下拉列表
         });
 
         closeSettingsBtn.addEventListener('click', () => {
@@ -977,6 +1034,10 @@ async function decryptApiKey() {
 
         // 在页面加载完成后初始化应用
         window.addEventListener('load', initializeApp);
+
+apiLineSelect.addEventListener('change', () => {
+    apiKeyInput.value = ""; // 清空 API Key 输入框
+});
     </script>
 </body>
 
