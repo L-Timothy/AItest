@@ -305,7 +305,7 @@
 <div class="form-group">
     <label for="apiLine">线路:</label>
     <select id="apiLine" class="w-full border rounded p-2">
-        <option value="line1">线路1</option> <option value="line2">线路2</option>
+        <option value="line1">线路1</option> <option value="line2">线路2</option> <option value="line4">线路4</option>
     </select>
 </div>
             <div class="modal-buttons">
@@ -381,7 +381,7 @@ const apiUrls = {
     line1: {
         url: 'https://kr.gptuu.com/v1/chat/completions',
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
-        modelDisplayNames: { // 将模型显示名称的映射关系放到 apiUrls 对象中
+        modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
             'claude-3-opus-20240229': 'claude-3-opus'
         }
@@ -389,9 +389,16 @@ const apiUrls = {
     line2: {
         url: 'https://capi.swt-ai.com/v1/chat/completions',
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
-        modelDisplayNames: { // 将模型显示名称的映射关系放到 apiUrls 对象中
+        modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
             'claude-3-opus-20240229': 'claude-3-opus'
+        }
+    },
+    line4: {
+        url: 'https://apikey.2334375990.workers.dev', // 使用你的 Worker URL
+        models: ['gpt-4o-2024-08-06', 'claude-3-haiku-20240307'],
+        modelDisplayNames: {
+'claude-3-haiku-20240307': 'claude-3-haiku'
         }
     },
 };
