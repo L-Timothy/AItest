@@ -335,43 +335,79 @@
 
 <div id="instructionsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
     <div class="bg-white p-6 rounded-lg w-128">
-        <h2 class="modal-title text-center">使用说明</h2>
-        <div class="text-left mt-4 space-y-4">
-            <p>1. 将Key输入至“设置”里面的相应位置即可使用。</p>
-            <p>2. 连续多轮使用会消耗更多的额度，因为每次对话时都会涉及到上下文，因此当对话内容过长时建议新建主题重新开始对话。</p>
-            <p>3. 价格说明：（1中文字符≈2tokens）</p>
-            <table class="w-full text-left table-auto border-collapse mt-4">
-                <thead>
-                    <tr>
-                        <th class="bg-gray-200 p-3 border border-gray-300">模型</th>
-                        <th class="bg-gray-200 p-3 border border-gray-300">提示价格</th>
-                        <th class="bg-gray-200 p-3 border border-gray-300">补全价格</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="p-3 border border-gray-300">gpt-4o</td>
-                        <td class="p-3 border border-gray-300">$5 / 1M tokens</td>
-                        <td class="p-3 border border-gray-300">$15 / 1M tokens</td>
-                    </tr>
-                    <tr class="bg-gray-100">
-                        <td class="p-3 border border-gray-300">claude-3-5-sonnet</td>
-                        <td class="p-3 border border-gray-300">$3 / 1M tokens</td>
-                        <td class="p-3 border border-gray-300">$15 / 1M tokens</td>
-                    </tr>
-                    <tr>
-                        <td class="p-3 border border-gray-300">claude-3-opus</td>
-                        <td class="p-3 border border-gray-300">$15 / 1M tokens</td>
-                        <td class="p-3 border border-gray-300">$75 / 1M tokens</td>
-                    </tr>
-                </tbody>
-            </table>
+        <h2 id="instructionsModalTitle" class="modal-title text-center">使用说明</h2> 
+
+        <div id="instructionsPage">  
+                        <div class="text-left mt-4 space-y-4">
+                <p>1. 将Key输入至“设置”里面的相应位置即可使用。</p>
+                <p>2. 连续多轮使用会消耗更多的额度，因为每次对话时都会涉及到上下文，因此当对话内容过长时建议新建主题重新开始对话。</p>
+                <p>3. 价格说明：（1中文字符≈2tokens）</p>
+                <table class="w-full text-left table-auto border-collapse mt-4">
+                    <thead>
+                        <tr>
+                            <th class="bg-gray-200 p-3 border border-gray-300">模型</th>
+                            <th class="bg-gray-200 p-3 border border-gray-300">提示价格</th>
+                            <th class="bg-gray-200 p-3 border border-gray-300">补全价格</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="p-3 border border-gray-300">gpt-4o</td>
+                            <td class="p-3 border border-gray-300">$5 / 1M tokens</td>
+                            <td class="p-3 border border-gray-300">$15 / 1M tokens</td>
+                        </tr>
+                        <tr class="bg-gray-100">
+                            <td class="p-3 border border-gray-300">claude-3-5-sonnet</td>
+                            <td class="p-3 border border-gray-300">$3 / 1M tokens</td>
+                            <td class="p-3 border border-gray-300">$15 / 1M tokens</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 border border-gray-300">claude-3-opus</td>
+                            <td class="p-3 border border-gray-300">$15 / 1M tokens</td>
+                            <td class="p-3 border border-gray-300">$75 / 1M tokens</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="modal-buttons mt-6 text-center">
-            <button id="closeInstructionsBtn"
-                class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition-colors duration-200">关闭</button>
+
+        <div id="changelogPage" class="hidden">
+            <div class="text-left mt-4 space-y-4">
+                <p>2024-10-27: 初始版本发布</p>
+                <p>2024-10-28: 添加线路4，修复一些 bug</p>
+            </div>
+        </div>
+
+<div id="apiQuotaPage" class="hidden">
+    <div class="fullscreen-container p-6"> 
+        <div class="content-container w-full max-w-md mx-auto"> 
+            <div class="form-group">
+                <label for="api_url" class="block mb-2 font-medium text-gray-700">选择线路:</label>
+                <select id="api_url" class="w-full border rounded p-2">
+                    <option value="https://opus.gptuu.com">线路 1</option>
+                    <option value="https://capi.swt-ai.com">线路 2</option>
+                </select>
+            </div>
+            <div class="form-group mt-4">
+                <label for="api_key" class="block mb-2 font-medium text-gray-700">API 密钥:</label>
+                <input type="password" id="api_key" placeholder="输入您的 API 密钥" class="w-full border rounded p-2">
+            </div>
+            <div class="modal-buttons mt-6 flex justify-center"> 
+                <button onclick="checkQuota()" class="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition-colors duration-200">检查余额</button>
+                <button onclick="clearForm()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition-colors duration-200">清空表单</button>
+            </div>
+            <div id="loader" class="loader mt-6"></div>
+            <div id="result" class="result mt-6"></div>
         </div>
     </div>
+</div>
+
+        <div class="modal-buttons mt-6 text-center">
+            <button id="prevPageBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2 hover:bg-gray-400 transition-colors duration-200 hidden">上一页</button>
+            <button id="nextPageBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded mr-2 hover:bg-gray-400 transition-colors duration-200 hidden">下一页</button>
+            <button id="closeInstructionsBtn" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition-colors duration-200">关闭</button>
+        </div>
+    </div>  
 </div>
 
 
@@ -432,9 +468,17 @@ let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1.url; 
         const menuToggle = document.getElementById('menuToggle');
         const mainContent = document.getElementById('mainContent');
         const instructionsBtn = document.getElementById('instructionsBtn');
-        const instructionsModal = document.getElementById('instructionsModal');
+const instructionsModalContainer = document.getElementById('instructionsModal'); 
         const closeInstructionsBtn = document.getElementById('closeInstructionsBtn');
 
+const instructionsModalTitle = document.getElementById('instructionsModalTitle'); // 获取标题元素
+const instructionsPage = document.getElementById('instructionsPage'); 
+const changelogContent = document.getElementById('changelogPage'); 
+const apiQuotaContent = document.getElementById('apiQuotaPage'); 
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+
+let currentPage = instructionsPage; // 初始页面
 
         function preprocessAIResponse(content) {
             content = content.replace(/\n{2,}/g, '\n<paragraph-break>\n');
@@ -538,6 +582,53 @@ let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1.url; 
                 }
             });
         }
+
+function checkQuota() {
+    const apiUrl = document.getElementById('api_url').value;
+    const apiKey = document.getElementById('api_key').value;
+
+    const resultDiv = document.getElementById('result');
+    const loader = document.getElementById('loader');
+
+    resultDiv.style.display = 'none';
+    loader.style.display = 'block';
+
+    fetch('https://你的CloudflareWorkerURL/api', { // 替换为你的 Cloudflare Worker URL
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            apiUrl: apiUrl,
+            apiKey: apiKey
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loader.style.display = 'none';
+        if (data.error) {
+            resultDiv.innerHTML = `<span class="text-red-500">检查额度失败: ${data.error}</span>`;
+        } else {
+            resultDiv.innerHTML = `
+                <p class="font-medium">可用额度: <span class="text-green-500">$${data.remain}</span></p>
+                <p class="font-medium">已用额度: <span class="text-yellow-500">$${data.used}</span></p>
+                <p class="font-medium">总额度: <span class="text-blue-500">$${data.quota}</span></p>
+            `;
+        }
+        resultDiv.style.display = 'block';
+    })
+    .catch(error => {
+        loader.style.display = 'none';
+        resultDiv.innerHTML = `<span class="text-red-500">检查额度失败: ${error.message}</span>`;
+        resultDiv.style.display = 'block';
+    });
+}
+
+function clearForm() {
+    document.getElementById('api_key').value = '';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('loader').style.display = 'none';
+}
 
 async function sendMessage(message = null) {
     const userMessage = message || userInput.value.trim();
@@ -651,6 +742,58 @@ async function sendMessage(message = null) {
     }
 }
 
+function showPage(page) {
+    // 只在当前页面发生改变时才隐藏所有页面
+    if (currentPage !== page) {
+        // 隐藏所有页面
+        instructionsPage.classList.add('hidden');
+        changelogContent.classList.add('hidden');
+        apiQuotaContent.classList.add('hidden');
+
+        // 更新当前页面  
+        currentPage = page; 
+    }
+
+    // 显示目标页面
+    page.classList.remove('hidden');
+
+    // 更新标题
+    if (page === instructionsPage) {  
+        if (instructionsModalTitle.textContent !== "使用说明") {
+            instructionsModalTitle.textContent = "使用说明";
+        }
+    } else if (page === changelogContent) {
+        if (instructionsModalTitle.textContent !== "更新日志") {
+            instructionsModalTitle.textContent = "更新日志";
+        }
+    } else if (page === apiQuotaContent) {
+        if (instructionsModalTitle.textContent !== "API 余额查询") {
+            instructionsModalTitle.textContent = "API 余额查询";
+        }
+    }
+
+    // 更新按钮状态
+    prevPageBtn.classList.toggle('hidden', currentPage === instructionsPage);
+    nextPageBtn.classList.toggle('hidden', currentPage === apiQuotaContent);
+}
+
+
+prevPageBtn.addEventListener('click', () => {  
+        if (currentPage === changelogContent) {
+            showPage(instructionsPage); // 调用 showPage 函数
+        } else if (currentPage === apiQuotaContent) {
+            showPage(changelogContent); // 调用 showPage 函数
+        }
+    });
+
+    nextPageBtn.addEventListener('click', () => {  
+        if (currentPage === instructionsPage) {
+            showPage(changelogContent); // 调用 showPage 函数
+        } else if (currentPage === changelogContent) {
+            showPage(apiQuotaContent); // 调用 showPage 函数
+        }
+    });
+
         function createTopic(name) {
             const topic = {
                 id: Date.now(),
@@ -755,23 +898,29 @@ function deleteTopic(topicId) {
   }
 }
 
-        function setupModalListeners(modalId, openBtnId, closeBtnId) {
-            const modal = document.getElementById(modalId);
-            const openBtn = document.getElementById(openBtnId);
-            const closeBtn = document.getElementById(closeBtnId);
+function setupModalListeners(modalId, openBtnId, closeBtnId) {
+    const modal = document.getElementById(modalId);
+    const openBtn = document.getElementById(openBtnId);
+    const closeBtn = document.getElementById(closeBtnId);
 
-            openBtn.addEventListener('click', () => {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            });
+    openBtn.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        showPage(instructionsPage); // 打开模态框时默认显示使用说明页面
+    });
 
-            closeBtn.addEventListener('click', closeModal);
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
 
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        });
+   
 
             function closeModal() {
                 modal.classList.add('hidden');
