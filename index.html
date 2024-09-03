@@ -149,6 +149,24 @@
             font-weight: 600;
         }
 
+.loader {
+    border: 4px solid #f3f3f3; 
+    border-top: 4px solid #3498db; 
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    margin: 20px auto; 
+}
+
+.loader.active { /* 添加新的类 */
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
         /* 响应式设计 */
         @media (max-width: 768px) {
             #sidebar {
@@ -305,7 +323,10 @@
 <div class="form-group">
     <label for="apiLine">线路:</label>
     <select id="apiLine" class="w-full border rounded p-2">
-        <option value="line1">线路1</option> <option value="line2">线路2</option> <option value="line4">线路4</option>
+        <option value="line1">线路1</option> 
+        <option value="line2">线路2</option> 
+        <option value="line3">线路3</option> 
+        <option value="line4">线路4（免费）</option>
     </select>
 </div>
             <div class="modal-buttons">
@@ -384,8 +405,9 @@
             <div class="form-group">
                 <label for="api_url" class="block mb-2 font-medium text-gray-700">选择线路:</label>
                 <select id="api_url" class="w-full border rounded p-2">
-                    <option value="https://opus.gptuu.com">线路 1</option>
-                    <option value="https://capi.swt-ai.com">线路 2</option>
+                    <option value="line1">线路1</option>
+                    <option value="line2">线路2</option>
+                    <option value="line3">线路3</option>
                 </select>
             </div>
             <div class="form-group mt-4">
@@ -396,7 +418,7 @@
                 <button onclick="checkQuota()" class="bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition-colors duration-200">检查余额</button>
                 <button onclick="clearForm()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition-colors duration-200">清空表单</button>
             </div>
-            <div id="loader" class="loader mt-6"></div>
+<div id="loader" class="loader mt-6 hidden"></div> <div id="result" class="result mt-6"></div>
             <div id="result" class="result mt-6"></div>
         </div>
     </div>
@@ -422,6 +444,7 @@ const apiUrls = {
             'claude-3-opus-20240229': 'claude-3-opus'
         }
     },
+
     line2: {
         url: 'https://capi.swt-ai.com/v1/chat/completions',
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
@@ -430,6 +453,16 @@ const apiUrls = {
             'claude-3-opus-20240229': 'claude-3-opus'
         }
     },
+
+    line3: {
+        url: 'https://api.swt-ai.com/v1/chat/completions',
+        models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
+        modelDisplayNames: { 
+            'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
+            'claude-3-opus-20240229': 'claude-3-opus'
+        }
+    },
+
     line4: {
         url: 'https://233432.xyz/api/openai/v1/chat/completions', // 使用你的 Worker URL
         models: ['gpt-4o-2024-08-06', 'claude-3-haiku-20240307'],
@@ -437,6 +470,7 @@ const apiUrls = {
 'claude-3-haiku-20240307': 'claude-3-haiku'
         }
     },
+
 };
 
 let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1.url; // 使用 apiUrls.line1.url 获取线路 1 的 URL
@@ -568,20 +602,26 @@ let currentPage = instructionsPage; // 初始页面
             });
         }
 
-        function addRegenerateButtonListener(button) {
-            button.addEventListener('click', function () {
-                const messageId = this.getAttribute('data-message-id');
-                const messageElement = document.getElementById(messageId);
+function addRegenerateButtonListener(button) {
+    button.addEventListener('click', function () {
+        const messageId = this.getAttribute('data-message-id');
+        const messageElement = document.getElementById(messageId);
 
-                const lastUserMessage = currentTopic.messages.filter(msg => msg.role === 'user').pop();
+        // 获取最后一条用户消息，无论 AI 是否成功回复
+        const lastUserMessage = currentTopic.messages.filter(msg => msg.role === 'user').pop();
 
-                if (lastUserMessage) {
-                    messageElement.closest('.ai-message').remove();
-                    currentTopic.messages.pop();
-                    sendMessage(lastUserMessage.content);
-                }
-            });
+        if (lastUserMessage) {
+            // 移除当前助手消息（即使是出错信息）
+            messageElement.closest('.ai-message').remove();
+
+            // 移除 messages 数组中的最后一条消息（无论是什么角色）
+            currentTopic.messages.pop(); 
+
+            // 重新发送最后一条用户消息
+            sendMessage(lastUserMessage.content); 
         }
+    });
+}
 
 function checkQuota() {
     const apiUrl = document.getElementById('api_url').value;
@@ -592,6 +632,7 @@ function checkQuota() {
 
     resultDiv.style.display = 'none';
     loader.style.display = 'block';
+    loader.classList.add('active'); // 显示加载动画
 
     fetch('https://233432.xyz/api', { // 替换为你的 Cloudflare Worker URL
         method: 'POST',
@@ -605,6 +646,7 @@ function checkQuota() {
     })
     .then(response => response.json())
     .then(data => {
+        loader.classList.remove('active'); // 隐藏加载动画
         loader.style.display = 'none';
         if (data.error) {
             resultDiv.innerHTML = `<span class="text-red-500">检查额度失败: ${data.error}</span>`;
@@ -618,6 +660,7 @@ function checkQuota() {
         resultDiv.style.display = 'block';
     })
     .catch(error => {
+        loader.classList.remove('active'); // 隐藏加载动画
         loader.style.display = 'none';
         resultDiv.innerHTML = `<span class="text-red-500">检查额度失败: ${error.message}</span>`;
         resultDiv.style.display = 'block';
@@ -627,7 +670,7 @@ function checkQuota() {
 function clearForm() {
     document.getElementById('api_key').value = '';
     document.getElementById('result').style.display = 'none';
-    document.getElementById('loader').style.display = 'none';
+    document.getElementById('loader').classList.remove('active');
 }
 
 async function sendMessage(message = null) {
@@ -714,24 +757,36 @@ async function sendMessage(message = null) {
             for (const parsedLine of parsedLines) {
                 const { choices } = parsedLine;
                 if (choices && choices.length > 0) {
-                    const { delta } = choices[0];
+                    const { delta, finish_reason } = choices[0]; // 获取 finish_reason
                     const { content } = delta;
                     if (content) {
                         aiMessage += content;
                         document.getElementById(messageId).innerHTML = marked.parse(preprocessAIResponse(aiMessage));
+                    } else if (finish_reason) { // 如果 finish_reason 存在，则说明 AI 回复已结束
+                        if (finish_reason === 'stop') {
+                            // AI 正常结束回复
+                            if (currentTopic) {
+                                currentTopic.messages.push({ role: 'assistant', content: aiMessage });
+                                currentTopic.model = modelSelect.value;
+                                saveTopic(currentTopic);
+                            }
+                        } else {
+                            // AI 因为错误或其他原因结束回复
+                            document.getElementById(messageId).innerHTML = `抱歉，AI 无法生成回复。请尝试重新生成或修改您的问题。`;
+                            console.error('AI 回复结束原因:', finish_reason);
+                        }
+
+                        // 添加按钮监听器
+                        addCopyButtonListener(aiMessageDiv.querySelector('.copy-button'));
+                        addRegenerateButtonListener(aiMessageDiv.querySelector('.regenerate-button'));
+
+                        // 跳出循环
+                        break;
                     }
                 }
             }
         }
 
-        if (currentTopic) {
-            currentTopic.messages.push({ role: 'assistant', content: aiMessage });
-            currentTopic.model = modelSelect.value;
-            saveTopic(currentTopic);
-        }
-
-        addCopyButtonListener(aiMessageDiv.querySelector('.copy-button'));
-        addRegenerateButtonListener(aiMessageDiv.querySelector('.regenerate-button'));
     } catch (error) {
         console.error('Error:', error);
         if (error.message === '请在设置里填入正确的 API Key') {
@@ -957,13 +1012,21 @@ function initializeApp() {
     apiKey = localStorage.getItem('apiKey') || '';
     temperature = parseFloat(localStorage.getItem('temperature')) || 0.7;
 
-    // 获取存储的线路 URL，如果没有则使用第一线路的 URL
+    // 获取存储的线路 URL，如果没有则使用线路选择下拉列表中的默认值
     const storedApiUrl = localStorage.getItem('currentApiUrl');
-    const defaultApiUrl = apiUrls.line1.url; // 获取第一线路的 URL
-    currentApiUrl = storedApiUrl || defaultApiUrl;
+    const defaultApiUrl = apiUrls[apiLineSelect.value].url; // 使用 apiLineSelect.value 获取默认线路的 URL
+    currentApiUrl = storedApiUrl || defaultApiUrl; 
 
     apiKeyInput.value = apiKey;
     temperatureInput.value = temperature;
+
+    // 设置 API Key 输入框的可见性
+    const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
+    if (apiLineSelect.value === 'line4') {
+        apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
+    } else {
+        apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
+    }
 
     // 确保在 currentApiUrl 初始化后再更新模型下拉列表
     updateModelSelect(); 
@@ -971,7 +1034,6 @@ function initializeApp() {
     appInitialized = true;
 }
 
-// 更新模型选择下拉列表
 function updateModelSelect() {
     modelSelect.innerHTML = ''; // 清空下拉列表
 
@@ -996,7 +1058,7 @@ function updateModelSelect() {
     });
 
     // 设置线路选择下拉列表的默认值
-    apiLineSelect.value = lineName;
+    apiLineSelect.value = lineName; 
 }
 
     topicList.addEventListener('click', (event) => {
@@ -1035,29 +1097,30 @@ settingsBtn.addEventListener('click', () => {
     settingsModal.classList.add('flex');
 });
 
-        saveSettingsBtn.addEventListener('click', () => {
-            apiKey = apiKeyInput.value;
-            temperature = parseFloat(temperatureInput.value);
+saveSettingsBtn.addEventListener('click', () => {
+    apiKey = apiKeyInput.value;
+    temperature = parseFloat(temperatureInput.value);
 
     // 获取选中的线路名称
-    const selectedLine = apiLineSelect.value; // 直接使用 apiLineSelect.value 获取线路名称
+    const selectedLine = apiLineSelect.value; 
     currentApiUrl = apiUrls[selectedLine].url; // 根据线路名称获取 URL
 
-            if (apiKey) {
-                encryptApiKey(apiKey)
-                    .then(() => {
-                        localStorage.removeItem('apiKey');
-                    })
-                    .catch(error => {
-                        console.error('加密 API Key 失败:', error);
-                    });
-            }
-            localStorage.setItem('temperature', temperature);
-            localStorage.setItem('currentApiUrl', currentApiUrl);
-            settingsModal.classList.add('hidden');
-            settingsModal.classList.remove('flex');
-            updateModelSelect(); // 更新模型选择下拉列表
-        });
+    if (apiKey) {
+        encryptApiKey(apiKey)
+            .then(() => {
+                localStorage.removeItem('apiKey'); 
+            })
+            .catch(error => {
+                console.error('加密 API Key 失败:', error);
+            });
+    }
+    localStorage.setItem('temperature', temperature);
+    localStorage.setItem('currentApiUrl', currentApiUrl); // 将当前线路 URL 存储到 localStorage
+    settingsModal.classList.add('hidden');
+    settingsModal.classList.remove('flex');
+
+    updateModelSelect(); // 更新模型选择下拉列表 
+});
 
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.add('hidden');
@@ -1192,7 +1255,13 @@ async function decryptApiKey() {
         window.addEventListener('load', initializeApp);
 
 apiLineSelect.addEventListener('change', () => {
-    apiKeyInput.value = ""; // 清空 API Key 输入框
+    const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
+    if (apiLineSelect.value === 'line4') {
+        apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
+    } else {
+        apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
+        apiKeyInput.value = ""; // 清空 API Key 输入框
+    }
 });
     </script>
 </body>
