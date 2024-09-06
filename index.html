@@ -396,6 +396,7 @@
 
         <div id="changelogPage" class="hidden">
             <div class="text-left mt-4 space-y-4">
+                <p>2024-9-06: 修复了部分模型无法保存；对话内容无法复制和重新生成的bug。</p>
                 <p>2024-9-03: 修复了众多bug，添加了日志更新，API余额查询，以及免费线路等功能。</p>
                 <p>2024-8-30: 初始版本发布。</p>
             </div>
@@ -604,20 +605,25 @@ let currentPage = instructionsPage; // 初始页面
             });
         }
 
-function addRegenerateButtonListener(button) {
+function addRegenerateButtonListener(button, isError) {
     button.addEventListener('click', function () {
         const messageId = this.getAttribute('data-message-id');
         const messageElement = document.getElementById(messageId);
 
-        // 获取最后一条用户消息，无论 AI 是否成功回复
+        // 获取最后一条用户消息
         const lastUserMessage = currentTopic.messages.filter(msg => msg.role === 'user').pop();
 
         if (lastUserMessage) {
             // 移除当前助手消息（即使是出错信息）
             messageElement.closest('.ai-message').remove();
 
-            // 移除 messages 数组中的最后一条消息（无论是什么角色）
-            currentTopic.messages.pop(); 
+            if (isError) {
+                // 如果是错误情况，不需要移除消息历史
+            } else {
+                // 移除 messages 数组中的最后两条消息（用户消息和AI回复）
+                currentTopic.messages.pop(); 
+                currentTopic.messages.pop(); 
+            }
 
             // 重新发送最后一条用户消息
             sendMessage(lastUserMessage.content); 
@@ -689,6 +695,10 @@ async function sendMessage(message = null) {
         createTopic('默认主题');
     }
 
+    // 添加用户消息到历史记录
+    currentTopic.messages.push({ role: 'user', content: userMessage });
+    saveTopic(currentTopic);
+
     const messageId = 'msg-' + Date.now();
     const aiMessageDiv = document.createElement('div');
     aiMessageDiv.classList.add('mb-4', 'message', 'mr-auto');
@@ -711,6 +721,9 @@ async function sendMessage(message = null) {
     `;
     chatContainer.appendChild(aiMessageDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    let isError = false;
+    let aiMessage = '';
 
     try {
         const decryptedApiKey = await decryptApiKey(); // 解密 API Key
@@ -735,7 +748,6 @@ async function sendMessage(message = null) {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let aiMessage = '';
 
         while (true) {
             const { done, value } = await reader.read();
@@ -759,43 +771,37 @@ async function sendMessage(message = null) {
             for (const parsedLine of parsedLines) {
                 const { choices } = parsedLine;
                 if (choices && choices.length > 0) {
-                    const { delta, finish_reason } = choices[0]; // 获取 finish_reason
+                    const { delta } = choices[0];
                     const { content } = delta;
                     if (content) {
                         aiMessage += content;
                         document.getElementById(messageId).innerHTML = marked.parse(preprocessAIResponse(aiMessage));
-                    } else if (finish_reason) { // 如果 finish_reason 存在，则说明 AI 回复已结束
-                        if (finish_reason === 'stop') {
-                            // AI 正常结束回复
-                            if (currentTopic) {
-                                currentTopic.messages.push({ role: 'assistant', content: aiMessage });
-                                currentTopic.model = modelSelect.value;
-                                saveTopic(currentTopic);
-                            }
-                        } else {
-                            // AI 因为错误或其他原因结束回复
-                            document.getElementById(messageId).innerHTML = `抱歉，AI 无法生成回复。请尝试重新生成或修改您的问题。`;
-                            console.error('AI 回复结束原因:', finish_reason);
-                        }
-
-                        // 添加按钮监听器
-                        addCopyButtonListener(aiMessageDiv.querySelector('.copy-button'));
-                        addRegenerateButtonListener(aiMessageDiv.querySelector('.regenerate-button'));
-
-                        // 跳出循环
-                        break;
                     }
                 }
             }
         }
 
+        // 只在成功接收到完整回复后添加 AI 消息到历史记录
+        if (aiMessage) {
+            currentTopic.messages.push({ role: 'assistant', content: aiMessage });
+            currentTopic.model = modelSelect.value;
+            saveTopic(currentTopic);
+        }
+
     } catch (error) {
         console.error('Error:', error);
+        isError = true;
         if (error.message === '请在设置里填入正确的 API Key') {
             document.getElementById(messageId).innerHTML = `请在设置里填入正确的 API Key`;
         } else {
             document.getElementById(messageId).innerHTML = `抱歉，发生了错误：${error.message}`;
         }
+        // 如果发生错误，移除之前添加的用户消息
+        currentTopic.messages.pop();
+        saveTopic(currentTopic);
+    } finally {
+        addCopyButtonListener(aiMessageDiv.querySelector('.copy-button'));
+        addRegenerateButtonListener(aiMessageDiv.querySelector('.regenerate-button'), isError);
     }
 }
 
@@ -876,16 +882,19 @@ prevPageBtn.addEventListener('click', () => {
 
 function switchTopic(topic) {
     if (currentTopic && currentTopic.id === topic.id) {
-        return; // 如果切换到当前主题，则不进行任何操作
+        return;
     }
 
     currentTopic = topic;
-    chatContainer.innerHTML = ''; // 清空聊天容器
+    chatContainer.innerHTML = '';
 
     if (topic) {
         currentTopicElement.textContent = topic.name;
-        topic.messages.forEach(msg => {
-            addMessage(msg.content, msg.role === 'user', false);
+        topic.messages.forEach((msg, index) => {
+            // 只有当这条消息不是用户消息，或者是用户消息但前一条不是用户消息时才添加
+            if (msg.role !== 'user' || index === 0 || topic.messages[index - 1].role !== 'user') {
+                addMessage(msg.content, msg.role === 'user', false);
+            }
         });
         if (topic.model) {
             modelSelect.value = topic.model;
@@ -894,7 +903,7 @@ function switchTopic(topic) {
         currentTopicElement.textContent = 'AI 对话助手';
     }
 
-    renderTopicList(); // 重新渲染主题列表，更新选中状态
+    renderTopicList();
 }
 
 function renderTopicList() {
