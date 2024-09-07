@@ -1046,7 +1046,10 @@ function initializeApp() {
 
     // 设置 API Key 输入框的可见性
     const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
-    if (apiLineSelect.value === 'line4', 'line5') {
+    const storedLine = localStorage.getItem('currentApiUrl') ? 
+        Object.keys(apiUrls).find(key => apiUrls[key].url === localStorage.getItem('currentApiUrl')) : 
+        'line1'; // 如果没有存储线路信息，则默认为 'line1'
+    if (storedLine === 'line4' || storedLine === 'line5') {
         apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
     } else {
         apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
