@@ -328,7 +328,7 @@
         <option value="line2">线路2</option> 
         <option value="line3">线路3</option> 
         <option value="line4">线路4（免费）</option>
-        <option value="line4">线路5</option>
+        <option value="line5">线路5</option>
     </select>
 </div>
             <div class="modal-buttons">
@@ -1280,7 +1280,7 @@ async function decryptApiKey() {
 
 apiLineSelect.addEventListener('change', () => {
     const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
-    if (apiLineSelect.value === 'line4') {
+    if (apiLineSelect.value === 'line4', 'line5') {
         apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
     } else {
         apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
