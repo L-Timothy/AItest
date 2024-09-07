@@ -1280,7 +1280,7 @@ async function decryptApiKey() {
 
 apiLineSelect.addEventListener('change', () => {
     const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
-    if (apiLineSelect.value === 'line4', 'line5') {
+    if (apiLineSelect.value === 'line4' || apiLineSelect.value === 'line5') {
         apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
     } else {
         apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
