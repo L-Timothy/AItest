@@ -328,7 +328,7 @@
         <option value="line2">线路2</option> 
         <option value="line3">线路3</option> 
         <option value="line4">线路4（免费）</option>
-        <option value="line5">线路5</option>
+        <option value="line5">线路5（免费）</option>
     </select>
 </div>
             <div class="modal-buttons">
@@ -397,6 +397,7 @@
 
         <div id="changelogPage" class="hidden">
             <div class="text-left mt-4 space-y-4">
+                <p>2024-9-13: 修复了线路4无法使用的bug；新增线路5，使用频率限制为每10s一次（限制频率所有人共享）；由于Anthropic公司政策限制，所有线路Claude模型暂不可用。</p>
                 <p>2024-9-06: 修复了部分模型无法保存；对话内容无法复制和重新生成的bug。</p>
                 <p>2024-9-03: 修复了众多bug，添加了日志更新，API余额查询，以及免费线路等功能。</p>
                 <p>2024-8-30: 初始版本发布。</p>
@@ -469,17 +470,16 @@ const apiUrls = {
 
     line4: {
         url: 'https://233432.xyz/api/line4/v1/chat/completions', // 添加 /line4 前缀
-        models: ['claude-3-5-sonnet-20240620', 'claude-3-opus-20240229', 'gpt-4o', 'gemini-1.5-pro-latest'],
+        models: ['gpt-4o'],
         modelDisplayNames: {
 'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
-'claude-3-opus-20240229': 'claude-3-opus',
-'gemini-1.5-pro-latest': 'gemini-1.5-pro'
+'claude-3-opus-20240229': 'claude-3-opus'
         }
     },
 
     line5: {
         url: 'https://233432.xyz/api/line5/v1/chat/completions', // 添加 /line5 前缀
-        models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
+        models: ['gpt-4o', 'gpt-4-turbo'],
         modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
             'claude-3-opus-20240229': 'claude-3-opus'
