@@ -9,6 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
 <link rel="icon" href="https://img.icons8.com/?size=100&id=fO5yVwARGUEB&format=png&color=000000" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
     <style>
         /* 通用样式 */
         .scrollbar-hide::-webkit-scrollbar {
@@ -257,6 +260,36 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* Markdown 内容样式 */
+        .message-content pre {
+            background-color: #2d2d2d;
+            color: #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .message-content code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .message-content th, .message-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .message-content th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
     </style>
 </head>
 
@@ -362,7 +395,7 @@
 
         <div id="instructionsPage">  
                         <div class="text-left mt-4 space-y-4">
-                <p>1. 将Key输入至“设置”里面的相应位置即可使用。</p>
+                <p>1. 将Key输入至"设置"里面的相应位置即可使用。</p>
                 <p>2. 连续多轮使用会消耗更多的额度，因为每次对话时都会涉及到上下文，因此当对话内容过长时建议新建主题重新开始对话。</p>
                 <p>3. 设置里面temperature的值为0~1，值越低时，AI回答更加可靠、一致，适合查询事实或获取标准流程。值越高时，AI会产生更多样、新颖的想法，适合头脑风暴或创意写作。您可以根据需求，调节temperature。</p>
                 <p>4. 价格说明：（1中文字符≈2tokens）</p>
@@ -397,7 +430,8 @@
 
         <div id="changelogPage" class="hidden">
             <div class="text-left mt-4 space-y-4">
-                <p>2024-9-13: 修复了线路4无法使用的bug；新增线路5，使用频率限制为每10s一次（限制频率所有人共享）；由于Anthropic公司政策限制，所有线路Claude模型暂不可用。</p>
+                <p>2024-9-16: 优化了AI回复的格式。</p>
+                <p>2024-9-13: 修复了线路4无法使用的bug；新增免费线路5，使用频率限制为每10s一次（限制频率所有人共享）；由于Anthropic公司政策限制，所有线路Claude模型暂不可用。</p>
                 <p>2024-9-06: 修复了部分模型无法保存；对话内容无法复制和重新生成的bug。</p>
                 <p>2024-9-03: 修复了众多bug，添加了日志更新，API余额查询，以及免费线路等功能。</p>
                 <p>2024-8-30: 初始版本发布。</p>
@@ -530,20 +564,7 @@ const nextPageBtn = document.getElementById('nextPageBtn');
 let currentPage = instructionsPage; // 初始页面
 
         function preprocessAIResponse(content) {
-            content = content.replace(/\n{2,}/g, '\n<paragraph-break>\n');
-            content = content.replace(/^(\s*)(\d+\.\s|\-\s|\•\s)/gm, '$1- ');
-            content = content.replace(/^(\s*)-\s(.+)$/gm, (match, space, text) => {
-                if (!/^\*\*.*\*\*/.test(text)) {
-                    const colonIndex = text.indexOf(':');
-                    if (colonIndex !== -1) {
-                        const title = text.slice(0, colonIndex).trim();
-                        const rest = text.slice(colonIndex + 1).trim();
-                        return `${space}- **${title}**: ${rest}`;
-                    }
-                }
-                return match;
-            });
-            content = content.replace(/<paragraph-break>/g, '\n\n');
+            // 移除不必要的预处理，直接返回原始内容
             return content;
         }
 
@@ -554,15 +575,16 @@ let currentPage = instructionsPage; // 初始页面
             if (isUser) {
                 messageDiv.innerHTML = `
             <div class="rounded-lg p-3 bg-blue-100 text-blue-800">
-                <div class="message-content">${marked.parse(content, { breaks: true })}</div>
+                <div class="message-content">${marked.parse(content)}</div>
             </div>
         `;
             } else {
                 const messageId = 'msg-' + Date.now();
                 const processedContent = preprocessAIResponse(content);
+                const htmlContent = marked.parse(processedContent, { breaks: true });
                 messageDiv.innerHTML = `
             <div class="ai-message">
-                <div class="message-content" id="${messageId}">${marked.parse(processedContent, { breaks: true })}</div>
+                <div class="message-content" id="${messageId}">${htmlContent}</div>
                 <div class="message-actions">
                     <button class="icon-button regenerate-button" data-message-id="${messageId}" title="重新生成">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -580,6 +602,7 @@ let currentPage = instructionsPage; // 初始页面
 
                 addCopyButtonListener(messageDiv.querySelector('.copy-button'));
                 addRegenerateButtonListener(messageDiv.querySelector('.regenerate-button'));
+                hljs.highlightAll(); // 触发代码高亮
             }
 
             chatContainer.appendChild(messageDiv);
