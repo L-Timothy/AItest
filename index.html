@@ -10,6 +10,7 @@
 <link rel="icon" href="https://img.icons8.com/?size=100&id=fO5yVwARGUEB&format=png&color=000000" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
     <style>
@@ -17,141 +18,195 @@
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
-
+        
         .scrollbar-hide {
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-
+        
         .topic-active {
-            background-color: #4a5568;
+            background-color: #808994;
         }
-
-        /* 消息内容样式 */
-        .message-content p {
-            margin-bottom: 1em;
+        
+        /* 聊天容器 */
+        #chatContainer {
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff; /* 白色背景 */
+            padding: 20px;
+            border-radius: 8px;
+            overflow-y: auto;
+            flex-grow: 1;
         }
-
-        .message-content p:last-child {
-            margin-bottom: 0;
+        
+        /* 用户消息样式 */
+        .user-message {
+            background-color: #dcf8c6;
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin: 10px 0;
+            align-self: flex-end; /* 右对齐 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word; /* 防止内容过长 */
+            max-width: 80%; /* 保持最大宽度 */
+            display: inline-block; /* 根据内容自适应宽度 */
+            min-width: 0; /* 移除最小宽度限制 */
         }
-
-        .message-content ul,
-        .message-content ol {
-            margin-top: 0.5em;
-            margin-bottom: 0.5em;
-            padding-left: 1.5em;
-        }
-
-        .message-content li {
-            margin-bottom: 0.25em;
-        }
-
-        .message-content li:last-child {
-            margin-bottom: 0;
-        }
-
+        
         /* AI 消息样式 */
         .ai-message {
-            background-color: #f7f7f7;
+            background-color: #f1f0f0;
             border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 16px;
-            padding-bottom: 48px;
-            margin-bottom: 16px;
-            position: relative;
-            border: 1px solid #e0e0e0;
+            padding: 10px 15px;
+            margin: 10px 0;
+            align-self: flex-start; /* 左对齐 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word; /* 防止内容过长 */
+            display: inline-block; /* 根据内容自适应宽度 */
+            max-width: 80%; /* 保持最大宽度 */
+            min-width: 0; /* 移除最小宽度限制 */
         }
 
         .ai-message .message-content {
+  white-space: pre-wrap;
+}
+        
+        /* 消息内容 */
+        .message-content {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+            display: inline; /* 修改为 inline 以适应内容宽度 */
+            white-space: normal; /* 允许正常换行 */
+            max-width: 80%; /* 可根据需要调整 */
+            word-break: break-word; /* 防止过长内容溢出 */
         }
-
+        
         /* 消息操作按钮样式 */
         .message-actions {
-            position: absolute;
-            bottom: 12px;
-            right: 16px;
             display: flex;
-            align-items: center;
+            justify-content: flex-end; /* 右对齐操作按钮 */
             gap: 12px;
+            margin-top: 8px; /* 与消息内容之间的间距 */
         }
+        
+/* 发送按钮样式调整 */
+.input-container {
+    position: relative; /* 设置为相对定位，以便内部绝对定位 */
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
 
-        .icon-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            transition: opacity 0.3s ease;
-            opacity: 0.6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+.user-input {
+    flex: 1;
+    padding: 10px 50px 10px 10px; /* 右侧留出空间给发送按钮 */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    font-size: 16px;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
 
-        .icon-button:hover {
-            opacity: 1;
-        }
+#sendBtn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px; /* 调整垂直位置 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555; /* 设置图标颜色 */
+}
 
-        .icon-button svg {
-            width: 20px;
-            height: 20px;
-        }
+#sendBtn .send-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+}
 
-        /* 设置和新建主题模态框样式 */
-        #settingsModal,
-        #newTopicModal,
-        #instructionsModal {
-            z-index: 100;
-        }
+#sendBtn:hover .send-icon {
+    transform: scale(1.1); /* 鼠标悬停时放大图标 */
+}
 
-        #settingsModal .bg-white,
-        #newTopicModal .bg-white,
-        #instructionsModal .bg-white {
-            width: 90%;
-            max-width: 500px;
-            margin: 5% auto;
-            padding: 2rem;
-            border-radius: 12px;
-        }
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity 0.3s ease;
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 1.5rem;
-        }
+.icon-button:hover {
+    opacity: 1;
+}
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
+.icon-button svg {
+    width: 20px;
+    height: 20px;
+}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
 
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-        }
+/* 设置和新建主题模态框样式 */
+#settingsModal,
+#newTopicModal,
+#instructionsModal {
+    z-index: 100;
+}
 
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-        }
+#settingsModal .bg-white,
+#newTopicModal .bg-white,
+#instructionsModal .bg-white {
+    width: 90%;
+    max-width: 500px;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 12px;
+}
 
-        .modal-buttons button {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-weight: 600;
-        }
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-buttons button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+}
 
 .loader {
     border: 4px solid #f3f3f3; 
@@ -171,147 +226,207 @@
     100% { transform: rotate(360deg); }
 }
 
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            #sidebar {
-                position: fixed;
-                left: -100%;
-                top: 0;
-                bottom: 0;
-                width: 35%;
-                min-width: 200px;
-                max-width: 300px;
-                z-index: 50;
-                transition: left 0.3s ease-in-out;
-            }
+/* 响应式设计 */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        width: 35%;
+        min-width: 200px;
+        max-width: 300px;
+        z-index: 50;
+        transition: left 0.3s ease-in-out;
+    }
 
-            #sidebar.open {
-                left: 0;
-            }
+    #sidebar.open {
+        left: 0;
+    }
 
-            #mainContent {
-                width: 100%;
-            }
+    #mainContent {
+        width: 100%;
+    }
 
-            #sidebar h2 {
-                font-size: 1.2rem;
-            }
+    #sidebar h2 {
+        font-size: 1.2rem;
+    }
 
-            #sidebar button,
-            #topicList div {
-                font-size: 0.9rem;
-                padding: 0.5rem;
-            }
+    #sidebar button,
+    #topicList div {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
 
-            .bg-white.shadow-md.p-4 {
-                padding: 0.5rem;
-            }
+    .bg-white.shadow-md.p-4 {
+        padding: 0.5rem;
+    }
 
-            #currentTopic {
-                font-size: 1.2rem;
-            }
+    #currentTopic {
+        font-size: 1.2rem;
+    }
 
-            #modelSelect {
-                font-size: 0.9rem;
-            }
+    #modelSelect {
+        font-size: 0.9rem;
+    }
 
-            #chatContainer {
-                height: calc(100vh - 110px);
-            }
+    #chatContainer {
+        height: calc(100vh - 110px);
+    }
 
-            .message {
-                max-width: 90%;
-            }
+    .message {
+        max-width: 90%;
+    }
 
-            .ai-message {
-                padding: 0.75rem;
-                padding-bottom: 2.5rem;
-            }
+    .ai-message {
+        padding: 0.75rem;
+        padding-bottom: 2.5rem;
+    }
 
-            .message-actions {
-                bottom: 0.25rem;
-                right: 0.25rem;
-            }
+    .message-actions {
+        bottom: 0.25rem;
+        right: 0.25rem;
+    }
 
-            .icon-button svg {
-                width: 16px;
-                height: 16px;
-            }
+    .icon-button svg {
+        width: 16px;
+        height: 16px;
+    }
 
-            #userInput {
-                font-size: 0.9rem;
-            }
+    #userInput {
+        font-size: 0.9rem;
+    }
 
-            #sendBtn {
-                font-size: 0.9rem;
-                padding: 0.5rem 1rem;
-            }
+    #sendBtn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
 
-            #settingsModal .bg-white,
-            #newTopicModal .bg-white,
-            #instructionsModal .bg-white {
-                width: 90%;
-                max-width: 350px;
-                margin: 10% auto;
-                padding: 1.5rem;
-            }
+    #settingsModal .bg-white,
+    #newTopicModal .bg-white,
+    #instructionsModal .bg-white {
+        width: 90%;
+        max-width: 350px;
+        margin: 10% auto;
+        padding: 1.5rem;
+    }
 
-            .modal-title {
-                font-size: 1.2rem;
-            }
-        }
+    .modal-title {
+        font-size: 1.2rem;
+    }
+}
 
-        /* Markdown 内容样式 */
-        .message-content pre {
-            background-color: #2d2d2d;
-            color: #ccc;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
+/* Markdown 内容样式 */
+.message-content pre {
+    background-color: #2d2d2d;
+    color: #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
 
-        .message-content code {
-            background-color: #f5f5f5;
-            padding: 2px 4px;
-            border-radius: 4px;
-        }
+.message-content code {
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
 
-        .message-content table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+.message-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        .message-content th, .message-content td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
+.message-content th, .message-content td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
 
-        .message-content th {
-            background-color: #f2f2f2;
-            text-align: left;
-        }
+.message-content th {
+    background-color: #f2f2f2;
+    text-align: left;
+}
+
+/* 优化后的聊天区域和输入框样式 */
+/* 输入区域 */
+.flex.flex-col.md:flex-row {
+    position: relative; /* 为绝对定位的发送按钮提供参考 */
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+    align-items: flex-start;
+}
+
+/* 输入框 */
+#userInput {
+    width: 100%;
+    padding: 10px 50px 10px 15px; /* 右侧留出空间放置发送按钮 */
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    outline: none;
+    font-size: 16px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+/* 发送按钮图标 */
+#sendBtn {
+    position: absolute;
+    right: 20px;
+    bottom: 15px; /* 垂直居中 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: #555; /* 设置图标颜色 */
+    text-indent: -9999px; /* 隐藏按钮文本 */
+}
+
+/* 调整 Font Awesome 图标的显示 */
+#sendBtn:focus {
+    outline: none;
+}
     </style>
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-white-100">
     <div class="flex-1 flex overflow-hidden h-screen">
+
         <div id="sidebar"
-            class="w-64 bg-gray-800 text-white p-4 flex flex-col transition-all duration-300 ease-in-out">
-            <h2 id="主题列表" class="text-2xl font-bold mb-4">主题列表</h2>
-            <button id="newTopicBtn"
-                class="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600 transition-colors duration-200">新建主题</button>
-            <div id="topicList" class="flex-1 overflow-y-auto scrollbar-hide"></div>
-            <button id="instructionsBtn" class="mt-2 hover:text-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="w-6 h-6 inline-block">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                </svg>
-                使用说明
-            </button>
-            <button id="settingsBtn"
-                class="bg-gray-600 text-white px-4 py-2 rounded mt-2 hover:bg-gray-700 transition-colors duration-200">设置</button>
-        </div>
+        class="w-64 bg-gray-100 text-gray-800 p-4 flex flex-col transition-all duration-300 ease-in-out rounded-lg overflow-hidden">
+        <h2 class="text-2xl font-bold mb-4">主题列表</h2>
+        <button id="newTopicBtn"
+            class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg mb-4 hover:bg-gray-400 transition-colors duration-200">新建主题</button> 
+        <div id="topicList" class="flex-1 overflow-y-auto scrollbar-hide">
+            <div class="topic-item p-2 rounded-lg cursor-pointer flex justify-between items-center mb-2 hover:bg-gray-300 bg-gray-200">
+                <span>默认主题</span>
+                <div>
+                    <button class="edit-topic-btn mr-2 text-gray-600 hover:text-gray-800">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button class="delete-topic-btn text-red-500 hover:text-red-700">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        <!-- 其他主题项 -->
+    </div>
+    <button id="instructionsBtn" class="mt-2 hover:text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="w-6 h-6 inline-block">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+        使用说明
+    </button>
+    <button id="settingsBtn"
+        class="bg-gray-300 text-gray-800 px-4 py-2 rounded-lg mt-2 hover:bg-gray-400 transition-colors duration-200">设置</button> <!-- 添加 rounded-lg -->
+</div>
 
         <div id="mainContent" class="flex-1 flex flex-col overflow-hidden">
             <div class="bg-white shadow-md p-4 flex justify-between items-center">
@@ -325,20 +440,24 @@
                 </button>
                 <div class="flex items-center">
                     <label for="modelSelect" class="mr-2">模型:</label>
-                    <select id="modelSelect" class="border rounded p-1">
-                    </select>
+<select id="modelSelect" class="border rounded-lg p-1">
+</select>
                 </div>
             </div>
 
             <div id="chatContainer" class="flex-1 overflow-y-auto p-4 scrollbar-hide"></div>
 
             <div class="bg-white p-4 shadow-md">
-                <div class="flex flex-col md:flex-row">
-                    <textarea id="userInput" class="flex-1 border rounded p-2 mb-2 md:mb-0 md:mr-2" rows="3"
-                        placeholder="输入消息..."></textarea>
-                    <button id="sendBtn"
-                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors duration-200">发送</button>
-                </div>
+<!-- 输入区域 -->
+<div class="input-container">
+    <textarea id="userInput" class="user-input" rows="3" placeholder="输入消息..."></textarea>
+    <button id="sendBtn" aria-label="发送">
+        <!-- 使用新的发送图标 -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="send-icon" fill="currentColor" viewBox="0 0 24 24" stroke="none">
+            <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" />
+        </svg>
+    </button>
+</div>
             </div>
         </div>
     </div>
@@ -569,50 +688,49 @@ let currentPage = instructionsPage; // 初始页面
         }
 
         function addMessage(content, isUser = false, shouldSave = true) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('mb-4', 'message', isUser ? 'ml-auto' : 'mr-auto');
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('mb-4', 'message');
 
-            if (isUser) {
-                messageDiv.innerHTML = `
-            <div class="rounded-lg p-3 bg-blue-100 text-blue-800">
-                <div class="message-content">${marked.parse(content)}</div>
-            </div>
+    if (isUser) {
+        messageDiv.classList.add('user-message'); // 应用用户消息样式
+        messageDiv.style.alignSelf = 'flex-end'; // 右对齐
+        messageDiv.innerHTML = `
+            <div class="message-content">${marked.parse(content)}</div>
         `;
-            } else {
-                const messageId = 'msg-' + Date.now();
-                const processedContent = preprocessAIResponse(content);
-                const htmlContent = marked.parse(processedContent, { breaks: true });
-                messageDiv.innerHTML = `
-            <div class="ai-message">
-                <div class="message-content" id="${messageId}">${htmlContent}</div>
-                <div class="message-actions">
-                    <button class="icon-button regenerate-button" data-message-id="${messageId}" title="重新生成">
+    } else {
+        messageDiv.classList.add('ai-message'); // 应用 AI 消息样式
+        messageDiv.style.alignSelf = 'flex-start'; // 左对齐
+        const messageId = 'msg-' + Date.now();
+        const processedContent = preprocessAIResponse(content);
+        const htmlContent = marked.parse(processedContent, { breaks: true });
+        messageDiv.innerHTML = `
+            <div class="message-content" id="${messageId}">${htmlContent}</div>
+            <div class="message-actions">
+                <button class="icon-button regenerate-button" data-message-id="${messageId}" title="重新生成">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                    </button>
-                    <button class="icon-button copy-button" data-message-id="${messageId}" title="复制">
+                </button>
+                <button class="icon-button copy-button" data-message-id="${messageId}" title="复制">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
-                    </button>
-                </div>
+                </button>
             </div>
         `;
+        addCopyButtonListener(messageDiv.querySelector('.copy-button'));
+        addRegenerateButtonListener(messageDiv.querySelector('.regenerate-button'));
+        hljs.highlightAll(); // 触发代码高亮
+    }
 
-                addCopyButtonListener(messageDiv.querySelector('.copy-button'));
-                addRegenerateButtonListener(messageDiv.querySelector('.regenerate-button'));
-                hljs.highlightAll(); // 触发代码高亮
-            }
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            if (currentTopic && shouldSave) {
-                currentTopic.messages.push({ role: isUser ? 'user' : 'assistant', content: isUser ? content : processedContent });
-                saveTopic(currentTopic);
-            }
-        }
+    if (currentTopic && shouldSave) {
+        currentTopic.messages.push({ role: isUser ? 'user' : 'assistant', content: isUser ? content : processedContent });
+        saveTopic(currentTopic);
+    }
+}
 
         function addCopyButtonListener(button) {
             button.addEventListener('click', function () {
@@ -952,7 +1070,7 @@ function renderTopicList() {
         if (currentTopic && currentTopic.id === topic.id) {
             topicDiv.classList.add('topic-active');
         } else {
-            topicDiv.classList.add('bg-gray-700');
+            topicDiv.classList.add('bg-gray-200');
         }
 
         topicDiv.dataset.topicId = topic.id; // 添加 data-topic-id 属性
@@ -1312,6 +1430,7 @@ apiLineSelect.addEventListener('change', () => {
         apiKeyInput.value = ""; // 清空 API Key 输入框
     }
 });
+
     </script>
 </body>
 
