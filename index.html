@@ -598,11 +598,13 @@
 const apiUrls = {
     line0: {
         url: 'https://233432.xyz/api/line0/v1/chat/completions',
+        requiresApiKey: false, // 不需要 API Key
         models: ['gpt-4o', 'claude-3-5-sonnet'],
     },
 
     line1: {
         url: 'https://opus.gptuu.com/v1/chat/completions',
+        requiresApiKey: true, // 需要 API Key
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
         modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
@@ -612,6 +614,7 @@ const apiUrls = {
 
     line2: {
         url: 'https://capi.swt-ai.com/v1/chat/completions',
+        requiresApiKey: true, // 需要 API Key
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
         modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
@@ -621,6 +624,7 @@ const apiUrls = {
 
     line3: {
         url: 'https://api.swt-ai.com/v1/chat/completions',
+        requiresApiKey: true, // 需要 API Key
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
         modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
@@ -629,24 +633,25 @@ const apiUrls = {
     },
 
     line4: {
-        url: 'https://233432.xyz/api/line4/v1/chat/completions', // 添加 /line4 前缀
+        url: 'https://233432.xyz/api/line4/v1/chat/completions',
+        requiresApiKey: false, // 不需要 API Key
         models: ['gpt-4o-2024-05-13', 'o1-mini', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
         modelDisplayNames: {
-'gpt-4o-2024-05-13': 'gpt-4o',
-'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
-'claude-3-opus-20240229': 'claude-3-opus'
+            'gpt-4o-2024-05-13': 'gpt-4o',
+            'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
+            'claude-3-opus-20240229': 'claude-3-opus'
         }
     },
 
     line5: {
-        url: 'https://233432.xyz/api/line5/v1/chat/completions', // 添加 /line5 前缀
+        url: 'https://233432.xyz/api/line5/v1/chat/completions',
+        requiresApiKey: false, // 不需要 API Key
         models: ['gpt-4o', 'gpt-4-turbo'],
         modelDisplayNames: { 
             'claude-3-5-sonnet-20240620': 'claude-3-5-sonnet',
             'claude-3-opus-20240229': 'claude-3-opus'
         }
     },
-
 };
 
 let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line0.url; // 使用 apiUrls.line0.url 获取线路 1 的 URL
@@ -886,15 +891,36 @@ async function sendMessage(message = null) {
     let isError = false;
     let aiMessage = '';
 
-    try {
-        const decryptedApiKey = await decryptApiKey(); // 解密 API Key
+    // 获取当前选择的线路名称和详情
+    const selectedLineName = apiLineSelect.value;
+    const selectedApiLine = apiUrls[selectedLineName];
 
-        const response = await fetch(currentApiUrl, {
+    let decryptedApiKey = null;
+    if (selectedApiLine.requiresApiKey) {
+        try {
+            decryptedApiKey = await decryptApiKey(); // 解密 API Key
+        } catch (error) {
+            console.error('Error:', error);
+            isError = true;
+            document.getElementById(messageId).innerHTML = `请在设置里填入正确的 API Key`;
+            // 移除用户消息
+            currentTopic.messages.pop();
+            saveTopic(currentTopic);
+            return; // 中断函数执行
+        }
+    }
+
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (selectedApiLine.requiresApiKey && decryptedApiKey) {
+            headers['Authorization'] = `Bearer ${decryptedApiKey}`;
+        }
+
+        const response = await fetch(selectedApiLine.url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${decryptedApiKey}` // 使用解密后的 API Key
-            },
+            headers: headers,
             body: JSON.stringify({
                 model: modelSelect.value,
                 messages: currentTopic.messages,
