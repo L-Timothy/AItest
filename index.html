@@ -1197,7 +1197,7 @@ function initializeApp() {
     const storedLine = localStorage.getItem('currentApiUrl') ? 
         Object.keys(apiUrls).find(key => apiUrls[key].url === localStorage.getItem('currentApiUrl')) : 
         'line0'; // 如果没有存储线路信息，则默认为 'line0'
-    if (storedLine === 'line4' || storedLine === 'line5') {
+    if (storedLine === 'line4' || storedLine === 'line5' || storedLine === 'line0') {
         apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
     } else {
         apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
@@ -1431,7 +1431,7 @@ async function decryptApiKey() {
 
 apiLineSelect.addEventListener('change', () => {
     const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
-    if (apiLineSelect.value === 'line4' || apiLineSelect.value === 'line5') {
+    if (apiLineSelect.value === 'line4' || apiLineSelect.value === 'line5' || apiLineSelect.value === 'line0') {
         apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
     } else {
         apiKeyInputDiv.style.display = 'block'; // 显示 API Key 输入框
