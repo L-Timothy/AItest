@@ -476,6 +476,7 @@
 <div class="form-group">
     <label for="apiLine">线路:</label>
     <select id="apiLine" class="w-full border rounded p-2">
+	<option value="line0">默认</option> 
         <option value="line1">线路1</option> 
         <option value="line2">线路2</option> 
         <option value="line3">线路3</option> 
@@ -564,7 +565,7 @@
             <div class="form-group">
                 <label for="api_url" class="block mb-2 font-medium text-gray-700">选择线路:</label>
                 <select id="api_url" class="w-full border rounded p-2">
-                    <option value="https://kr.gptuu.com">线路1</option>
+                    <option value="https://opus.gptuu.com">线路1</option>
                     <option value="https://capi.swt-ai.com">线路2</option>
                     <option value="https://api.swt-ai.com">线路3</option>
                 </select>
@@ -595,6 +596,11 @@
 
     <script>
 const apiUrls = {
+    line0: {
+        url: 'https://233432.xyz/api/line0/v1/chat/completions',
+        models: ['yi-lightning'],
+    },
+
     line1: {
         url: 'https://opus.gptuu.com/v1/chat/completions',
         models: ['gpt-4o', 'claude-3-5-sonnet-20240620', 'claude-3-opus-20240229'],
@@ -643,7 +649,7 @@ const apiUrls = {
 
 };
 
-let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line1.url; // 使用 apiUrls.line1.url 获取线路 1 的 URL
+let currentApiUrl = localStorage.getItem('currentApiUrl') || apiUrls.line0.url; // 使用 apiUrls.line0.url 获取线路 1 的 URL
         let apiKey = localStorage.getItem('apiKey') || '';
         let temperature = parseFloat(localStorage.getItem('temperature')) || 0.7;
         let currentTopic = null;
@@ -1190,7 +1196,7 @@ function initializeApp() {
     const apiKeyInputDiv = document.getElementById('apiKey').parentElement;
     const storedLine = localStorage.getItem('currentApiUrl') ? 
         Object.keys(apiUrls).find(key => apiUrls[key].url === localStorage.getItem('currentApiUrl')) : 
-        'line1'; // 如果没有存储线路信息，则默认为 'line1'
+        'line0'; // 如果没有存储线路信息，则默认为 'line0'
     if (storedLine === 'line4' || storedLine === 'line5') {
         apiKeyInputDiv.style.display = 'none'; // 隐藏 API Key 输入框
     } else {
